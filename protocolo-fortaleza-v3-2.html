@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Protocolo Fortaleza</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#1D9E75;--teal-light:#E1F5EE;--teal-dark:#085041;
+  --purple:#534AB7;--amber:#BA7517;--amber-light:#FAEEDA;
+  --red:#E24B4A;--red-light:#FCEBEB;
+  --bg:#F7F7F5;--surface:#FFFFFF;
+  --border:rgba(0,0,0,0.10);--border-md:rgba(0,0,0,0.18);
+  --text:#1A1A18;--text-muted:#6B6B67;
+  --rsm:8px;--rmd:12px;--rlg:16px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+     background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100dvh}
+.app{max-width:430px;margin:0 auto;padding-bottom:80px}
+.page{display:none}.page.active{display:block}
+.topbar{background:var(--surface);border-bottom:0.5px solid var(--border);
+        padding:12px 16px 10px;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:17px;font-weight:600}
+.topbar-sub{font-size:12px;color:var(--text-muted);margin-top:1px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;
+            background:var(--surface);border-top:0.5px solid var(--border);display:flex;z-index:10}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;
+          padding:7px 2px 12px;cursor:pointer;gap:2px;border:none;
+          background:transparent;color:var(--text-muted);font-size:9px}
+.nav-item.active{color:var(--teal)}
+.nav-icon{font-size:18px;line-height:1}
+.card{background:var(--surface);border:0.5px solid var(--border);
+      border-radius:var(--rlg);padding:14px 16px;margin:12px 16px 0}
+.card-title{font-size:11px;font-weight:600;color:var(--text-muted);
+            text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.btn{display:block;width:100%;padding:13px;border:none;border-radius:var(--rmd);
+     font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:active{background:var(--teal-dark);transform:scale(.98)}
+.btn-primary:disabled{background:#ccc;color:#888;cursor:default;transform:none}
+.btn-ghost{background:transparent;border:0.5px solid var(--border-md);color:var(--text)}
+.check-list{display:flex;flex-direction:column;gap:6px}
+.check-item{display:flex;align-items:center;justify-content:space-between;
+            padding:11px 12px;border:0.5px solid var(--border);
+            border-radius:var(--rsm);cursor:pointer;transition:all .15s;
+            background:var(--surface);user-select:none}
+.check-item.done{background:var(--teal-light);border-color:#5DCAA5}
+.check-left{display:flex;align-items:center;gap:10px}
+.check-circle{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border-md);
+              display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.check-item.done .check-circle{background:var(--teal);border-color:var(--teal)}
+.check-item.done .check-circle::after{content:'';display:block;width:10px;height:7px;
+  border-left:2px solid #fff;border-bottom:2px solid #fff;
+  transform:rotate(-45deg) translate(1px,-1px)}
+.check-label{font-size:14px}
+.check-item.done .check-label{color:var(--teal-dark);font-weight:500}
+.check-pts{font-size:12px;font-weight:600;color:var(--teal);white-space:nowrap}
+.check-item.done .check-pts{color:var(--teal-dark)}
+.person-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 16px 0}
+.person-tab{padding:12px;border:1.5px solid var(--border);border-radius:var(--rmd);
+            background:var(--surface);cursor:pointer;text-align:center;transition:all .15s}
+.person-tab.active{border-color:var(--teal);background:var(--teal-light)}
+.person-tab .pt-name{font-size:14px;font-weight:600}
+.person-tab.active .pt-name{color:var(--teal-dark)}
+.person-tab .pt-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+.metric-box{background:var(--bg);border-radius:var(--rsm);padding:12px;text-align:center}
+.metric-val{font-size:26px;font-weight:700;line-height:1}
+.metric-label{font-size:11px;color:var(--text-muted);margin-top:4px}
+.level-bar-bg{background:var(--bg);border-radius:4px;height:8px;overflow:hidden;margin:8px 0 4px}
+.level-bar-fill{height:8px;background:var(--teal);border-radius:4px;transition:width .5s ease}
+.level-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
+            background:var(--teal-light);color:var(--teal-dark);border-radius:20px;
+            font-size:13px;font-weight:600}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px}
+.field input,.field textarea,.field select{width:100%;padding:10px 12px;
+  border:0.5px solid var(--border-md);border-radius:var(--rsm);font-size:14px;
+  background:var(--surface);color:var(--text);font-family:inherit}
+.field textarea{resize:vertical;min-height:64px}
+.fields-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hist-row{display:flex;align-items:flex-start;justify-content:space-between;
+          padding:10px 0;border-bottom:0.5px solid var(--border);gap:8px}
+.hist-row:last-child{border-bottom:none}
+.hist-date{font-size:12px;color:var(--text-muted)}
+.hist-pts{font-size:13px;font-weight:600;color:var(--teal);white-space:nowrap}
+.badges-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.badge-card{border:0.5px solid var(--border);border-radius:var(--rsm);padding:12px;text-align:center}
+.badge-card.earned{background:var(--teal-light);border-color:#5DCAA5}
+.badge-card.locked{opacity:.45}
+.badge-icon{font-size:24px;margin-bottom:5px}
+.badge-name{font-size:12px;font-weight:600;line-height:1.3}
+.badge-card.earned .badge-name{color:var(--teal-dark)}
+.badge-desc{font-size:11px;color:var(--text-muted);margin-top:3px;line-height:1.3}
+.badge-card.earned .badge-desc{color:#0F6E56}
+.alert-red{background:var(--red-light);border:0.5px solid #f09595;
+           border-radius:var(--rsm);padding:10px 12px;margin-top:8px}
+.alert-red-title{font-size:13px;font-weight:600;color:#7a1f1f}
+.alert-red-body{font-size:12px;color:#a32d2d;margin-top:2px;line-height:1.4}
+.collapse-btn{width:100%;padding:8px 12px;border:0.5px dashed var(--border-md);
+              border-radius:var(--rsm);background:transparent;font-size:13px;
+              cursor:pointer;color:var(--text-muted);text-align:left}
+.collapsible{display:none;padding-top:10px}
+.collapsible.open{display:block}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+       background:#1a1a18;color:#fff;padding:10px 20px;border-radius:20px;
+       font-size:13px;font-weight:500;opacity:0;pointer-events:none;
+       transition:opacity .25s;z-index:100;white-space:nowrap;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+#page-splash{min-height:100dvh;display:flex;flex-direction:column;
+             align-items:center;justify-content:center;padding:32px 24px}
+.splash-title{font-size:28px;font-weight:700;text-align:center;margin-bottom:6px}
+.splash-sub{font-size:14px;color:var(--text-muted);text-align:center;margin-bottom:32px}
+.splash-form{width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px}
+.splash-form input,.splash-form select{width:100%;padding:13px 14px;
+  border:0.5px solid var(--border-md);border-radius:var(--rmd);font-size:15px;
+  background:var(--surface);color:var(--text)}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--teal);
+         border-radius:50%;animation:spin .7s linear infinite;margin:20px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.team-pts-big{font-size:42px;font-weight:700;text-align:center;padding:6px 0 2px}
+.row-between{display:flex;align-items:center;justify-content:space-between}
+strong{font-weight:600}
+/* RUTINA */
+.dia-btn{padding:9px 8px;border:1px solid var(--border-md);border-radius:var(--rsm);
+         background:var(--surface);font-size:12px;font-weight:500;cursor:pointer;
+         color:var(--text);transition:all .15s;text-align:center;line-height:1.3}
+.dia-btn.active{background:var(--teal-light);border-color:var(--teal);color:var(--teal-dark)}
+.ex-row{border:0.5px solid var(--border);border-radius:var(--rsm);padding:10px;margin-bottom:8px}
+.ex-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.ex-meta{font-size:11px;color:var(--text-muted);margin-bottom:6px}
+.ex-inputs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ex-inputs input{width:100%;padding:7px 10px;border:0.5px solid var(--border-md);
+                 border-radius:6px;font-size:13px;background:var(--surface);
+                 color:var(--text);text-align:center}
+.ex-inputs input::placeholder{font-size:11px;color:var(--text-muted)}
+.cardio-row{background:var(--amber-light);border-radius:var(--rsm);padding:10px;margin-bottom:8px}
+.cardio-label{font-size:13px;font-weight:600;color:var(--amber)}
+.cardio-sub{font-size:11px;color:#854F0B;margin-top:2px}
+/* AGUA */
+.agua-bar-bg{background:var(--bg);border-radius:6px;height:10px;overflow:hidden;margin:8px 0 4px}
+.agua-bar-fill{height:10px;background:#378ADD;border-radius:6px;transition:width .4s}
+.agua-btn{padding:12px;border:0.5px solid var(--border-md);border-radius:var(--rsm);
+          background:var(--surface);font-size:13px;font-weight:500;cursor:pointer;
+          color:var(--text);transition:all .15s;text-align:center}
+.agua-btn:active{transform:scale(.96);background:var(--bg)}
+/* MENÚ */
+.tab-row{display:flex;gap:4px;margin-bottom:10px}
+.tab-pill{flex:1;padding:7px 4px;border:0.5px solid var(--border-md);border-radius:20px;
+          background:var(--surface);font-size:12px;font-weight:500;cursor:pointer;
+          color:var(--text-muted);text-align:center;transition:all .15s}
+.tab-pill.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.menu-comida{font-size:12px;font-weight:600;color:var(--text);margin-top:8px;margin-bottom:2px}
+.menu-detalle{font-size:13px;color:var(--text-muted);line-height:1.5}
+.regla-row{display:flex;gap:8px;align-items:flex-start;padding:8px 0;
+           border-bottom:0.5px solid var(--border);font-size:13px;line-height:1.5}
+.regla-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);
+           flex-shrink:0;margin-top:5px}
+/* MEDIDAS */
+.lunes-banner{background:var(--teal-light);border:0.5px solid #5DCAA5;
+              border-radius:var(--rsm);padding:10px 12px;margin-bottom:10px}
+.lunes-title{font-size:13px;font-weight:700;color:var(--teal-dark)}
+.lunes-sub{font-size:12px;color:#0F6E56;margin-top:2px;line-height:1.4}
+.foto-thumb{width:64px;height:64px;border-radius:var(--rsm);object-fit:cover;
+            border:0.5px solid var(--border)}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="page-splash" class="page active">
+  <div style="font-size:48px;margin-bottom:8px">🛡️</div>
+  <div class="splash-title">Protocolo Fortaleza</div>
+  <div class="splash-sub">Reto de 12 semanas · Equipo de dos</div>
+  <div class="splash-form">
+    <div class="field">
+      <label>Código de sala del equipo</label>
+      <input type="text" id="room-code" placeholder="ej. FORTALEZA2026" maxlength="20"
+             style="text-transform:uppercase;letter-spacing:.08em;font-weight:600"
+             oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="field">
+      <label>Tu nombre</label>
+      <input type="text" id="player-name" placeholder="ej. Ana o Carlos" maxlength="20">
+    </div>
+    <div class="field">
+      <label>¿Tienes hipertensión?</label>
+      <select id="player-hta">
+        <option value="no">No</option>
+        <option value="yes">Sí — registrar presión arterial</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="joinRoom()">Entrar al protocolo</button>
+    <div style="font-size:11px;color:var(--text-muted);text-align:center">
+      Ambos usan el mismo código de sala. Datos en tiempo real.
+    </div>
+  </div>
+</div>
+
+<!-- APP ROOT -->
+<div id="app-root" style="display:none">
+  <div class="topbar">
+    <div class="row-between">
+      <div>
+        <div class="topbar-title" id="topbar-title">Protocolo Fortaleza</div>
+        <div class="topbar-sub" id="topbar-sub"></div>
+      </div>
+      <button onclick="logout()" style="font-size:11px;padding:5px 10px;border:0.5px solid var(--border-md);border-radius:20px;background:transparent;cursor:pointer;color:var(--text-muted)">Salir</button>
+    </div>
+  </div>
+
+  <!-- REGISTRO -->
+  <div id="page-registro" class="page app active">
+    <div class="person-tabs">
+      <div class="person-tab active" id="ptab-self" onclick="setMyView()">
+        <div class="pt-name" id="ptab-self-name">Yo</div>
+        <div class="pt-sub">Mi registro</div>
+      </div>
+      <div class="person-tab" id="ptab-partner" onclick="setPartnerView()">
+        <div class="pt-name" id="ptab-partner-name">Compañero/a</div>
+        <div class="pt-sub">Su progreso hoy</div>
+      </div>
+    </div>
+
+    <div id="my-view">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 16px 0">
+        <div class="metric-box">
+          <div class="metric-val" id="reg-pts-hoy" style="color:var(--teal)">0</div>
+          <div class="metric-label">Puntos hoy</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val" id="reg-pts-semana">0</div>
+          <div class="metric-label">Esta semana</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Alimentación</div>
+        <div class="check-list">
+          <div class="check-item" id="chk-desayuno" onclick="toggleCheck('desayuno',20)">
+            <div class="check-left"><div class="check-circle"></div><div class="check-label">Desayuno completo</div></div>
+            <div class="check-pts">+20 pts</div>
+          </div>
+          <div class="check-item" id="chk-almuerzo" onclick="toggleCheck('almuerzo',20)">
+            <div class="check-left"><div class="check-circle"></div><div class="check-label">Almuerzo completo</div></div>
+            <div class="check-pts">+20 pts</div>
+          </div>
+          <div class="check-item" id="chk-cena" onclick="toggleCheck('cena',15)">
+            <div class="check-left"><div class="check-circle"></div><div class="check-label">Cena completa</div></div>
+            <div class="check-pts">+15 pts</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Hidratación y movimiento</div>
+        <div class="check-list">
+          <div class="check-item" id="chk-agua" onclick="toggleCheck('agua',20)">
+            <div class="check-left"><div class="check-circle"></div>
+              <div>
+                <div class="check-label">Meta de agua cumplida</div>
+                <div style="font-size:11px;color:var(--text-muted)" id="agua-mini-label">→ ve a 💧 Agua para llevar el conteo</div>
+              </div>
+            </div>
+            <div class="check-pts">+20 pts</div>
+          </div>
+          <div class="check-item" id="chk-ejercicio" onclick="toggleCheck('ejercicio',15)">
+            <div class="check-left"><div class="check-circle"></div><div class="check-label">Gym o actividad física</div></div>
+            <div class="check-pts">+15 pts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GYM RUTINA -->
+      <div class="card">
+        <div class="card-title">Sesión de gym — rutina del día</div>
+        <div id="dia-selector-wrap">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">¿Qué día de rutina es hoy?</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="dia-btns">
+            <button class="dia-btn" onclick="selectDia(1)">Día 1<br><span style="font-weight:400">Pecho/Hombro</span></button>
+            <button class="dia-btn" onclick="selectDia(2)">Día 2<br><span style="font-weight:400">Espalda/Bíceps</span></button>
+            <button class="dia-btn" onclick="selectDia(3)">Día 3<br><span style="font-weight:400">Pierna</span></button>
+            <button class="dia-btn" onclick="selectDia(4)">Día 4<br><span style="font-weight:400">Torso completo</span></button>
+            <button class="dia-btn" onclick="selectDia(5)" style="grid-column:1/-1">Día 5 — Pierna/Glúteo/Brazos</button>
+          </div>
+          <button class="collapse-btn" onclick="marcarDescanso()" style="margin-top:8px;width:100%;text-align:center">Hoy es día de descanso</button>
+        </div>
+        <div id="rutina-display" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div id="rutina-titulo" style="font-size:13px;font-weight:600;color:var(--teal)"></div>
+            <button onclick="resetDia()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;text-decoration:underline">cambiar</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Ingresa el peso que usaste y tu RPE (esfuerzo del 1 al 10)</div>
+          <div id="ejercicios-list"></div>
+          <div class="check-item" id="chk-gymlog" onclick="toggleCheck('gymlog',10)" style="border-style:dashed;margin-top:6px">
+            <div class="check-left"><div class="check-circle"></div><div class="check-label">Sesión completada</div></div>
+            <div class="check-pts">+10 pts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRESIÓN ARTERIAL -->
+      <div class="card" id="hta-card" style="display:none">
+        <div class="card-title">Presión arterial</div>
+        <button class="collapse-btn" onclick="toggleCollapse('pa-collapse',this)">+ Registrar presión de hoy</button>
+        <div class="collapsible" id="pa-collapse">
+          <div class="fields-2" style="margin-top:8px">
+            <div class="field"><label>Sistólica (mmHg)</label>
+              <input type="number" id="pa-sys" placeholder="120" min="80" max="220" oninput="checkPA()"></div>
+            <div class="field"><label>Diastólica (mmHg)</label>
+              <input type="number" id="pa-dia" placeholder="80" min="50" max="140" oninput="checkPA()"></div>
+          </div>
+          <div class="check-item" id="chk-pa" onclick="toggleCheck('pa',30)">
+            <div class="check-left"><div class="check-circle"></div><div class="check-label">Presión registrada</div></div>
+            <div class="check-pts">+30 pts</div>
+          </div>
+          <div id="pa-alert" class="alert-red" style="display:none">
+            <div class="alert-red-title">⚠️ Presión elevada</div>
+            <div class="alert-red-body">PA mayor a 150/95. Pausa el entrenamiento intenso y consulta a tu médico.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Nota del día (opcional)</div>
+        <div class="field" style="margin:0">
+          <textarea id="nota-dia" placeholder="¿Cómo te sentiste? Energía, ánimo, algo importante..."></textarea>
+        </div>
+      </div>
+
+      <div style="margin:12px 16px 0">
+        <button class="btn btn-primary" id="btn-guardar" onclick="guardarDia()">
+          Guardar día — <span id="btn-pts">0</span> pts
+        </button>
+        <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px" id="guardado-label"></div>
+      </div>
+      <div style="height:8px"></div>
+    </div>
+
+    <div id="partner-view" style="display:none">
+      <div class="card">
+        <div class="card-title">Hoy</div>
+        <div id="partner-today-content"><div class="spinner"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Esta semana</div>
+        <div id="partner-week-content"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESO -->
+  <div id="page-progreso" class="page app">
+    <div class="card">
+      <div class="card-title">Equipo — puntos acumulados</div>
+      <div class="team-pts-big" id="prog-team-total">0</div>
+      <div style="text-align:center;margin-bottom:8px">
+        <span class="level-pill" id="prog-level">Nivel 1 — Recluta</span>
+      </div>
+      <div class="level-bar-bg"><div class="level-bar-fill" id="prog-level-bar" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:2px">
+        <span id="prog-level-cur">0 pts</span>
+        <span id="prog-level-next">siguiente: 1,000 pts</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 16px 0">
+      <div class="metric-box">
+        <div class="metric-val" id="prog-pts-me" style="color:var(--teal)">0</div>
+        <div class="metric-label" id="prog-label-me">Mis puntos</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="prog-pts-partner" style="color:var(--purple)">0</div>
+        <div class="metric-label" id="prog-label-partner">Puntos compañero/a</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Rachas</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="metric-box">
+          <div class="metric-val" id="prog-racha-me" style="color:var(--teal)">0</div>
+          <div class="metric-label" id="prog-racha-label-me">días — Yo</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-val" id="prog-racha-partner" style="color:var(--purple)">0</div>
+          <div class="metric-label" id="prog-racha-label-partner">días — Compañero/a</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDIDAS — lunes vs otros días -->
+    <div class="card" id="lunes-card" style="display:none">
+      <div class="lunes-banner">
+        <div class="lunes-title">¡Hoy es lunes — día de medición!</div>
+        <div class="lunes-sub">Regístrate en ayunas, antes de desayunar. Misma ropa y hora siempre.</div>
+      </div>
+      <div class="card-title">Medidas semanales</div>
+      <div class="fields-2" style="margin-bottom:10px">
+        <div class="field"><label>Peso (kg)</label>
+          <input type="number" id="inp-peso" placeholder="ej. 117.9" step="0.1"></div>
+        <div class="field"><label>Cintura (cm)</label>
+          <input type="number" id="inp-cintura" placeholder="ej. 102" step="0.5"></div>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <label>Foto de progreso (opcional)</label>
+        <input type="file" id="inp-foto" accept="image/*" capture="environment"
+               style="font-size:13px;padding:6px 0;width:100%">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px">Se guarda en tu teléfono. Útil para ver cambios cada 4 semanas.</div>
+      </div>
+      <button class="btn btn-primary" onclick="guardarMedidas()">Guardar medidas — +80 pts equipo</button>
+      <div id="medidas-hist" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card" id="no-lunes-card">
+      <div class="card-title">Medidas corporales</div>
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">
+        Las medidas se registran <strong>cada lunes en ayunas</strong>. Vuelve el próximo lunes.
+      </div>
+      <div id="medidas-hist-alt"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Semana actual</div>
+      <div id="semana-info"><div class="spinner"></div></div>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+
+  <!-- AGUA -->
+  <div id="page-agua" class="page app">
+    <div class="card">
+      <div class="card-title">Hidratación de hoy</div>
+      <div style="text-align:center;margin-bottom:4px">
+        <span style="font-size:40px;font-weight:700" id="agua-val">0</span>
+        <span style="font-size:15px;color:var(--text-muted)"> / <span id="agua-meta-txt">8</span> vasos</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:6px" id="agua-ml-txt">0 / 2000 ml</div>
+      <div class="agua-bar-bg"><div class="agua-bar-fill" id="agua-bar" style="width:0%"></div></div>
+      <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-bottom:14px" id="agua-pct-txt">0% de tu meta</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <button class="agua-btn" onclick="addAgua(250)">+1 vaso · 250 ml</button>
+        <button class="agua-btn" onclick="addAgua(500)">+500 ml · ½ botella</button>
+        <button class="agua-btn" onclick="addAgua(750)">+750 ml</button>
+        <button class="agua-btn" onclick="addAgua(1000)">+1 litro</button>
+      </div>
+      <button onclick="resetAgua()" style="width:100%;padding:8px;border:0.5px solid var(--border-md);border-radius:var(--rsm);background:transparent;font-size:12px;cursor:pointer;color:var(--text-muted)">Reiniciar contador</button>
+    </div>
+    <div class="card" id="agua-info-card">
+      <div class="card-title">Tu meta diaria</div>
+      <div id="agua-meta-info" style="font-size:13px;line-height:1.6"></div>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+
+  <!-- MENÚ -->
+  <div id="page-menu" class="page app">
+    <div class="card">
+      <div class="card-title">Plan semanal de alimentación</div>
+      <div class="tab-row" id="menu-tabs"></div>
+      <div id="menu-content"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Reglas de alimentación</div>
+      <div class="regla-row"><div class="regla-dot"></div><div>Cada comida: <strong>proteína + vegetal + carbohidrato medido</strong></div></div>
+      <div class="regla-row"><div class="regla-dot"></div><div><strong>Persona A:</strong> 2 palmas proteína · 1 porción carb · 1-2 puños vegetales</div></div>
+      <div class="regla-row"><div class="regla-dot"></div><div><strong>Persona B:</strong> 1.5 palmas proteína · ¾-1 porción carb · 1-2 puños vegetales</div></div>
+      <div class="regla-row"><div class="regla-dot"></div><div>1 porción carb = ½ taza arroz · 1 papa pequeña · 2 tortillas · 2 rebanadas pan integral · ½ taza frijoles</div></div>
+      <div class="regla-row"><div class="regla-dot"></div><div>Arroz máx 2-4 veces/semana. No en montaña — medido.</div></div>
+      <div class="regla-row"><div class="regla-dot"></div><div>Bebidas: agua, café sin azúcar, té. Sin jugos, gaseosas ni bebidas energéticas.</div></div>
+      <div class="regla-row" style="border:none"><div class="regla-dot"></div><div>HTA: café permitido si la PA no sube después. Si sube, cambiar a descafeinado.</div></div>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div id="page-historial" class="page app">
+    <div class="card">
+      <div class="card-title">Registro de días</div>
+      <div id="hist-days-list"><div class="spinner"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Sesiones de gym</div>
+      <div id="hist-gym-list"><div class="spinner"></div></div>
+    </div>
+    <div class="card" style="border-color:#f09595">
+      <div class="card-title" style="color:#7a1f1f">Reinicio inteligente</div>
+      <div style="font-size:13px;color:#a32d2d;margin-bottom:10px;line-height:1.5">¿Fallaste días? Sin castigo. Reinicia sin perder puntos ganados.</div>
+      <button class="btn" style="background:var(--red-light);color:#7a1f1f;border:0.5px solid #f09595" onclick="reinicioInteligente()">Activar reinicio — sin culpa</button>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+
+  <!-- LOGROS -->
+  <div id="page-logros" class="page app">
+    <div class="card">
+      <div class="card-title">Insignias</div>
+      <div class="badges-grid" id="badges-grid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Niveles del equipo</div>
+      <div id="niveles-list"></div>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="showPage('registro',this)"><span class="nav-icon">📋</span>Registro</button>
+    <button class="nav-item" onclick="showPage('progreso',this)"><span class="nav-icon">📈</span>Progreso</button>
+    <button class="nav-item" onclick="showPage('agua',this)"><span class="nav-icon">💧</span>Agua</button>
+    <button class="nav-item" onclick="showPage('menu',this)"><span class="nav-icon">🥗</span>Menú</button>
+    <button class="nav-item" onclick="showPage('historial',this)"><span class="nav-icon">🗓️</span>Historial</button>
+    <button class="nav-item" onclick="showPage('logros',this)"><span class="nav-icon">🏆</span>Logros</button>
+  </nav>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update, push }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyB8-7MLkQeDsIJPABAonqJSX5lQfzMKluU",
+  authDomain:        "fortaleza2026-77ba5.firebaseapp.com",
+  databaseURL:       "https://fortaleza2026-77ba5-default-rtdb.firebaseio.com",
+  projectId:         "fortaleza2026-77ba5",
+  storageBucket:     "fortaleza2026-77ba5.firebasestorage.app",
+  messagingSenderId: "697739118255",
+  appId:             "1:697739118255:web:8dd4024d60f8c6512e365a"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+
+// ── STATE ──
+let room='', myName='', myHTA=false;
+let todayChecks={}, todayPts=0, todayAlreadySaved=false;
+let roomData={};
+let diaRutina=null;
+let aguaMl=0, aguaMeta=2000;
+
+// ── DATA ──
+const LEVELS=[
+  {name:'Nivel 1 — Recluta',min:0,max:999},
+  {name:'Nivel 2 — Operativo',min:1000,max:2499},
+  {name:'Nivel 3 — Agente de campo',min:2500,max:4999},
+  {name:'Nivel 4 — Especialista',min:5000,max:7999},
+  {name:'Nivel 5 — Agente de élite',min:8000,max:11999},
+  {name:'Nivel 6 — Protocolo completado',min:12000,max:99999}
+];
+
+const BADGES=[
+  {id:'racha7',name:'Racha de 7',desc:'7 días seguidos',icon:'🔥',check:d=>maxRacha(d)>=7},
+  {id:'racha21',name:'Racha de 21',desc:'21 días seguidos',icon:'⚡',check:d=>maxRacha(d)>=21},
+  {id:'agua14',name:'Hidratado',desc:'Agua 14 días seguidos',icon:'💧',check:d=>aguaStreak(d)>=14},
+  {id:'gym10',name:'Gym x10',desc:'10 sesiones registradas',icon:'🏋️',check:d=>gymCount(d)>=10},
+  {id:'medidas3',name:'Centímetros reales',desc:'Cintura 3 veces registrada',icon:'📏',check:d=>medCount(d)>=3},
+  {id:'equipo10',name:'Equipo activo',desc:'Ambos con 10+ días',icon:'🤝',check:d=>bothActive(d,10)},
+  {id:'presion10',name:'Presión controlada',desc:'10 registros de PA',icon:'❤️',check:d=>paCount(d)>=10},
+  {id:'fin',name:'Protocolo completado',desc:'84 días completados',icon:'🏆',check:d=>totalDias(d)>=84}
+];
+
+const RUTINAS={
+  1:{nombre:'Día 1 — Pecho, hombro y tríceps',
+     ejercicios:[
+       {name:'Press de pecho en máquina',series:3,reps:'10-12'},
+       {name:'Press inclinado en máquina',series:3,reps:'10-12'},
+       {name:'Pec deck / aperturas',series:3,reps:'12-15'},
+       {name:'Press de hombro en máquina',series:3,reps:'10-12'},
+       {name:'Elevaciones laterales',series:3,reps:'12-15'},
+       {name:'Tríceps en polea',series:3,reps:'12-15'},
+       {name:'Extensión tríceps por encima',series:3,reps:'12-15'},
+     ],cardio:'Caminadora inclinada o bici suave · 12-15 min'},
+  2:{nombre:'Día 2 — Espalda, bíceps y abdomen',
+     ejercicios:[
+       {name:'Jalón al pecho',series:3,reps:'10-12'},
+       {name:'Remo sentado en cable',series:3,reps:'10-12'},
+       {name:'Remo con pecho apoyado',series:3,reps:'10-12'},
+       {name:'Pullover en polea',series:3,reps:'12-15'},
+       {name:'Face pulls',series:3,reps:'15'},
+       {name:'Curl bíceps en polea',series:3,reps:'12'},
+       {name:'Curl martillo',series:3,reps:'12'},
+       {name:'Plancha',series:3,reps:'30-45 seg'},
+       {name:'Elevaciones de rodilla',series:3,reps:'15'},
+     ],cardio:null},
+  3:{nombre:'Día 3 — Pierna completa',
+     ejercicios:[
+       {name:'Prensa',series:4,reps:'10-12'},
+       {name:'Sentadilla Smith o hack squat',series:3,reps:'10-12'},
+       {name:'Curl femoral',series:3,reps:'12'},
+       {name:'Extensión de pierna',series:3,reps:'12-15'},
+       {name:'Peso muerto rumano',series:3,reps:'10-12'},
+       {name:'Elevación de pantorrilla',series:4,reps:'15-20'},
+     ],cardio:'Bici o elíptica moderada · 15-20 min'},
+  4:{nombre:'Día 4 — Torso completo',
+     ejercicios:[
+       {name:'Press de pecho en máquina',series:3,reps:'10-12'},
+       {name:'Jalón al pecho agarre neutro',series:3,reps:'10-12'},
+       {name:'Remo sentado',series:3,reps:'10-12'},
+       {name:'Press de hombro ligero',series:3,reps:'12-15'},
+       {name:'Elevaciones laterales',series:3,reps:'12-15'},
+       {name:'Curl de bíceps',series:3,reps:'12'},
+       {name:'Tríceps en polea',series:3,reps:'12'},
+       {name:'Pallof press o cable crunch',series:3,reps:'12-15'},
+     ],cardio:null},
+  5:{nombre:'Día 5 — Pierna, glúteo y brazos',
+     ejercicios:[
+       {name:'Hip thrust en máquina',series:4,reps:'10-12'},
+       {name:'Prensa con pies altos',series:3,reps:'10-12'},
+       {name:'Curl femoral',series:3,reps:'12'},
+       {name:'Extensión de pierna',series:3,reps:'12-15'},
+       {name:'Abductores / aductores',series:3,reps:'15'},
+       {name:'Curl de bíceps',series:3,reps:'12'},
+       {name:'Tríceps en polea',series:3,reps:'12'},
+     ],cardio:'Caminata inclinada o bici · 15 min'}
+};
+
+const MENU=[
+  {dia:'Lunes',
+   desayuno:'Huevos revueltos + frijoles + tortilla + café sin azúcar',
+   almuerzo:'Pollo a la plancha + ensalada + ½ taza de arroz',
+   cena:'Atún con ensalada grande + aguacate + 1 tortilla'},
+  {dia:'Martes',
+   desayuno:'Sándwich integral de jamón de pavo + té sin azúcar',
+   almuerzo:'Carne magra + brócoli o ejotes + papa pequeña',
+   cena:'Huevos revueltos con tomate y cebolla + frijoles'},
+  {dia:'Miércoles',
+   desayuno:'Huevos revueltos + pan integral + fruta pequeña',
+   almuerzo:'Pescado + repollo y pepino + ½ taza de arroz',
+   cena:'Pollo desmenuzado + ensalada + 2 tortillas'},
+  {dia:'Jueves',
+   desayuno:'Salchicha de pavo + huevos revueltos + café sin azúcar',
+   almuerzo:'Fajitas de pollo con cebolla y chile + frijoles',
+   cena:'Ensalada grande con atún o pollo + 1 tostada integral'},
+  {dia:'Viernes',
+   desayuno:'Sándwich integral de pavo + agua o té',
+   almuerzo:'Carne magra + zucchini o coliflor + arroz medido',
+   cena:'Huevos revueltos + aguacate + ensalada'},
+  {dia:'Sábado',
+   desayuno:'Huevos revueltos con pollo desmenuzado + tortilla',
+   almuerzo:'Pescado o pollo + ensalada grande + frijoles',
+   cena:'Queso fresco bajo en sal + tomate + pepino + tortilla'},
+  {dia:'Domingo',
+   desayuno:'Huevos revueltos + frijoles + pan integral',
+   almuerzo:'Pollo al horno + vegetales + papa pequeña',
+   cena:'Atún o pavo + ensalada + 1 tortilla'},
+];
+
+// ── BADGE HELPERS ──
+function myDays(d){return Object.values(d.days||{}).filter(x=>x.player===myName)}
+function allDays(d){return Object.values(d.days||{})}
+function maxRacha(d){return (d.players||{})[myName]?.racha||0}
+function aguaStreak(d){let s=0,b=0;myDays(d).sort((a,c)=>a.fecha.localeCompare(c.fecha)).forEach(x=>{if(x.checks?.agua){s++;b=Math.max(b,s);}else s=0});return b}
+function gymCount(d){return myDays(d).filter(x=>x.checks?.gymlog).length}
+function medCount(d){return Object.values(d.medidas||{}).filter(m=>m.player===myName&&m.cintura).length}
+function paCount(d){return myDays(d).filter(x=>x.checks?.pa).length}
+function totalDias(d){return allDays(d).length}
+function bothActive(d,n){const names=[...new Set(allDays(d).map(x=>x.player))];return names.length>=2&&names.every(n2=>allDays(d).filter(x=>x.player===n2).length>=n)}
+
+// ── UTILS ──
+function todayKey(){return new Date().toISOString().slice(0,10)}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}
+function rRef(path=''){return ref(db,`rooms/${room}${path?'/'+path:''}`)}
+function getWeekStart(){const d=new Date();d.setDate(d.getDate()-d.getDay());return d.toISOString().slice(0,10)}
+
+// ── JOIN ──
+window.joinRoom=async function(){
+  const code=document.getElementById('room-code').value.trim().toUpperCase();
+  const name=document.getElementById('player-name').value.trim();
+  const hta=document.getElementById('player-hta').value==='yes';
+  if(!code||!name){toast('Completa el código y tu nombre');return}
+  room=code;myName=name;myHTA=hta;
+  localStorage.setItem('pf_session',JSON.stringify({room,myName,myHTA}));
+  await initPlayer();
+  startApp();
+};
+
+async function initPlayer(){
+  const snap=await get(ref(db,`rooms/${room}/players/${myName}`));
+  if(!snap.exists()){
+    await set(ref(db,`rooms/${room}/players/${myName}`),
+      {name:myName,hta:myHTA,ptsTotal:0,racha:0,joinedAt:Date.now()});
+  }
+}
+
+function startApp(){
+  document.getElementById('page-splash').classList.remove('active');
+  document.getElementById('app-root').style.display='block';
+  document.getElementById('topbar-title').textContent=`Protocolo Fortaleza · ${room}`;
+  document.getElementById('topbar-sub').textContent=`Hola, ${myName}`;
+  if(myHTA)document.getElementById('hta-card').style.display='block';
+  aguaMeta=myHTA?2500:2000;
+  onValue(rRef(),snap=>{roomData=snap.val()||{};refreshAll()});
+  loadTodayState();
+  initAguaPage();
+  checkLunes();
+}
+
+function loadTodayState(){
+  const key=`pf_today_${room}_${myName}_${todayKey()}`;
+  const s=localStorage.getItem(key);
+  if(s){const p=JSON.parse(s);todayChecks=p.checks||{};todayPts=p.pts||0;todayAlreadySaved=p.saved||false;
+    if(p.diaRutina)selectDia(p.diaRutina,true);
+    applyChecksUI();updatePtsDisplay();}
+}
+function saveTodayLocal(){
+  const key=`pf_today_${room}_${myName}_${todayKey()}`;
+  localStorage.setItem(key,JSON.stringify({checks:todayChecks,pts:todayPts,saved:todayAlreadySaved,diaRutina}));
+}
+
+// ── CHECKS ──
+window.toggleCheck=function(key,pts){
+  if(todayAlreadySaved){toast('Ya guardaste el día de hoy');return}
+  todayChecks[key]=!todayChecks[key];
+  todayPts=todayChecks[key]?todayPts+pts:Math.max(0,todayPts-pts);
+  const elId=key==='pa'?'chk-pa':key==='gymlog'?'chk-gymlog':'chk-'+key;
+  const el=document.getElementById(elId);
+  if(el)el.classList.toggle('done',!!todayChecks[key]);
+  updatePtsDisplay();saveTodayLocal();
+};
+
+function applyChecksUI(){
+  ['desayuno','almuerzo','cena','agua','ejercicio'].forEach(k=>{
+    const el=document.getElementById('chk-'+k);
+    if(el)el.classList.toggle('done',!!todayChecks[k]);
+  });
+  const gymEl=document.getElementById('chk-gymlog');
+  if(gymEl)gymEl.classList.toggle('done',!!todayChecks.gymlog);
+  const paEl=document.getElementById('chk-pa');
+  if(paEl)paEl.classList.toggle('done',!!todayChecks.pa);
+}
+
+function updatePtsDisplay(){
+  document.getElementById('reg-pts-hoy').textContent=todayPts;
+  document.getElementById('btn-pts').textContent=todayPts;
+  const wk=Object.values(roomData.days||{})
+    .filter(d=>d.player===myName&&d.fecha>=getWeekStart())
+    .reduce((a,b)=>a+b.pts,0);
+  document.getElementById('reg-pts-semana').textContent=wk+todayPts;
+}
+
+// ── PA CHECK ──
+window.checkPA=function(){
+  const s=parseInt(document.getElementById('pa-sys')?.value)||0;
+  const d=parseInt(document.getElementById('pa-dia')?.value)||0;
+  const al=document.getElementById('pa-alert');
+  if(al)al.style.display=(s>150||d>95)?'block':'none';
+};
+
+// ── RUTINA ──
+window.selectDia=function(dia,silent=false){
+  diaRutina=dia;
+  document.querySelectorAll('.dia-btn').forEach((b,i)=>b.classList.toggle('active',i===dia-1));
+  const r=RUTINAS[dia];
+  document.getElementById('rutina-titulo').textContent=r.nombre;
+  const list=document.getElementById('ejercicios-list');
+  list.innerHTML=r.ejercicios.map((e,i)=>`
+    <div class="ex-row">
+      <div class="ex-name">${e.name}</div>
+      <div class="ex-meta">${e.series} series × ${e.reps} reps</div>
+      <div class="ex-inputs">
+        <input type="number" placeholder="kg usado" min="0" step="0.5" class="gym-kg" data-i="${i}">
+        <input type="number" placeholder="RPE 1-10" min="1" max="10" class="gym-rpe" data-i="${i}">
+      </div>
+    </div>`).join('')+
+    (r.cardio?`<div class="cardio-row"><div class="cardio-label">Cardio</div><div class="cardio-sub">${r.cardio}</div></div>`:'');
+  document.getElementById('dia-selector-wrap').style.display='none';
+  document.getElementById('rutina-display').style.display='block';
+  if(!silent)saveTodayLocal();
+};
+
+window.resetDia=function(){
+  diaRutina=null;
+  document.getElementById('rutina-display').style.display='none';
+  document.getElementById('dia-selector-wrap').style.display='block';
+  document.querySelectorAll('.dia-btn').forEach(b=>b.classList.remove('active'));
+};
+
+window.marcarDescanso=function(){
+  todayChecks.descanso=true;saveTodayLocal();
+  toast('Día de descanso registrado');
+};
+
+function getGymData(){
+  if(!diaRutina)return[];
+  const r=RUTINAS[diaRutina];
+  return r.ejercicios.map((e,i)=>{
+    const kg=document.querySelector(`.gym-kg[data-i="${i}"]`)?.value||'-';
+    const rpe=document.querySelector(`.gym-rpe[data-i="${i}"]`)?.value||'-';
+    return{name:e.name,series:e.series,reps:e.reps,kg,rpe};
+  });
+}
+
+// ── GUARDAR DÍA ──
+window.guardarDia=async function(){
+  if(todayAlreadySaved){toast('Ya guardaste el día de hoy');return}
+  if(todayPts===0){toast('Marca al menos una tarea primero');return}
+  const btn=document.getElementById('btn-guardar');btn.disabled=true;
+  const today=todayKey();
+  const pa_s=document.getElementById('pa-sys')?.value||'';
+  const pa_d=document.getElementById('pa-dia')?.value||'';
+  const nota=document.getElementById('nota-dia').value;
+  const gym=getGymData();
+  const entry={player:myName,fecha:today,pts:todayPts,checks:{...todayChecks},
+    pa:pa_s?`${pa_s}/${pa_d}`:null,nota,gym,diaRutina,ts:Date.now()};
+  const full=todayChecks.desayuno&&todayChecks.almuerzo&&todayChecks.cena&&todayChecks.agua;
+  const curRacha=(roomData.players||{})[myName]?.racha||0;
+  const curTotal=(roomData.players||{})[myName]?.ptsTotal||0;
+  await push(rRef('days'),entry);
+  await update(rRef(`players/${myName}`),{ptsTotal:curTotal+todayPts,racha:full?curRacha+1:0,lastSeen:today});
+  todayAlreadySaved=true;saveTodayLocal();
+  document.getElementById('guardado-label').textContent=`✓ Guardado — ${todayPts} pts sumados`;
+  btn.disabled=false;
+  toast(`+${todayPts} pts guardados`);
+};
+
+// ── MEDIDAS ──
+window.guardarMedidas=async function(){
+  const peso=parseFloat(document.getElementById('inp-peso')?.value)||0;
+  const cintura=parseFloat(document.getElementById('inp-cintura')?.value)||0;
+  if(!peso&&!cintura){toast('Ingresa al menos un valor');return}
+  const entry={player:myName,fecha:todayKey(),peso,cintura,ts:Date.now()};
+  await push(rRef('medidas'),entry);
+  const cur=(roomData.players||{})[myName]?.ptsTotal||0;
+  await update(rRef(`players/${myName}`),{ptsTotal:cur+40});
+  const partner=getPartner();
+  if(partner){const cp=(roomData.players||{})[partner]?.ptsTotal||0;
+    await update(rRef(`players/${partner}`),{ptsTotal:cp+40});}
+  // save photo
+  const fotoEl=document.getElementById('inp-foto');
+  if(fotoEl&&fotoEl.files[0]){
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{localStorage.setItem(`pf_foto_${myName}_${todayKey()}`,ev.target.result);
+        toast('+80 pts · Medidas y foto guardadas');}
+      catch(e){toast('+80 pts · Medidas guardadas (foto muy pesada)');}
+    };
+    reader.readAsDataURL(fotoEl.files[0]);
+  } else { toast('+80 pts · Medidas guardadas'); }
+};
+
+// ── LUNES CHECK ──
+function checkLunes(){
+  const isLunes=new Date().getDay()===1;
+  const lc=document.getElementById('lunes-card');
+  const nlc=document.getElementById('no-lunes-card');
+  if(lc)lc.style.display=isLunes?'block':'none';
+  if(nlc)nlc.style.display=isLunes?'none':'block';
+}
+
+// ── AGUA ──
+function initAguaPage(){
+  aguaMeta=myHTA?2500:2000;
+  const vasosMeta=aguaMeta/250;
+  const el=document.getElementById('agua-meta-txt');
+  if(el)el.textContent=vasosMeta;
+  const info=document.getElementById('agua-meta-info');
+  if(info)info.innerHTML=myHTA
+    ?'<strong>Persona A (HTA):</strong> 2,500 ml / día — 10 vasos de 250 ml<br><span style="font-size:12px;color:var(--text-muted)">El agua ayuda a regular la presión arterial y mejorar la sensibilidad a la insulina.</span>'
+    :'<strong>Persona B:</strong> 2,000 ml / día — 8 vasos de 250 ml<br><span style="font-size:12px;color:var(--text-muted)">Meta base para metabolismo activo y resistencia a la insulina.</span>';
+  const key=`pf_agua_${myName}_${todayKey()}`;
+  aguaMl=parseInt(localStorage.getItem(key)||'0');
+  renderAgua();
+}
+
+window.addAgua=function(ml){
+  aguaMl=Math.min(aguaMl+ml,aguaMeta*1.5);
+  localStorage.setItem(`pf_agua_${myName}_${todayKey()}`,aguaMl);
+  renderAgua();
+  if(aguaMl>=aguaMeta&&!todayChecks.agua){
+    todayChecks.agua=true;todayPts+=20;
+    const el=document.getElementById('chk-agua');
+    if(el)el.classList.add('done');
+    updatePtsDisplay();saveTodayLocal();
+    toast('¡Meta de agua! +20 pts automáticos');
+  }
+};
+
+window.resetAgua=function(){
+  aguaMl=0;localStorage.setItem(`pf_agua_${myName}_${todayKey()}`,0);renderAgua();
+};
+
+function renderAgua(){
+  const vasos=Math.floor(aguaMl/250);
+  const pct=Math.min(Math.round((aguaMl/aguaMeta)*100),100);
+  const vEl=document.getElementById('agua-val');
+  const mlEl=document.getElementById('agua-ml-txt');
+  const barEl=document.getElementById('agua-bar');
+  const pctEl=document.getElementById('agua-pct-txt');
+  if(vEl)vEl.textContent=vasos;
+  if(mlEl)mlEl.textContent=`${aguaMl} / ${aguaMeta} ml`;
+  if(barEl)barEl.style.width=pct+'%';
+  if(pctEl)pctEl.textContent=pct+'% de tu meta';
+}
+
+// ── MENÚ ──
+let menuIdx=new Date().getDay()===0?6:new Date().getDay()-1;
+
+function initMenuPage(){
+  const tabs=document.getElementById('menu-tabs');
+  if(!tabs)return;
+  const dias=['L','M','X','J','V','S','D'];
+  tabs.innerHTML=dias.map((d,i)=>`<button class="tab-pill ${i===menuIdx?'active':''}" onclick="showMenuDia(${i})">${d}</button>`).join('');
+  showMenuDia(menuIdx);
+}
+
+window.showMenuDia=function(idx){
+  menuIdx=idx;
+  document.querySelectorAll('.tab-pill').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  const m=MENU[idx];
+  const el=document.getElementById('menu-content');
+  if(el)el.innerHTML=`
+    <div style="border:0.5px solid var(--border);border-radius:var(--rsm);padding:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">${m.dia}</div>
+      <div class="menu-comida">Desayuno</div><div class="menu-detalle">${m.desayuno}</div>
+      <div class="menu-comida">Almuerzo</div><div class="menu-detalle">${m.almuerzo}</div>
+      <div class="menu-comida">Cena</div><div class="menu-detalle">${m.cena}</div>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);padding:8px 2px;line-height:1.6">
+      <strong>1 porción carb:</strong> ½ taza arroz · 1 papa pequeña · 2 tortillas · 2 rebanadas pan integral · ½ taza frijoles
+    </div>`;
+};
+
+// ── PARTNER ──
+function getPartner(){
+  return Object.keys(roomData.players||{}).find(p=>p!==myName)||null;
+}
+
+window.setMyView=function(){
+  document.getElementById('my-view').style.display='block';
+  document.getElementById('partner-view').style.display='none';
+  document.getElementById('ptab-self').classList.add('active');
+  document.getElementById('ptab-partner').classList.remove('active');
+};
+
+window.setPartnerView=function(){
+  document.getElementById('my-view').style.display='none';
+  document.getElementById('partner-view').style.display='block';
+  document.getElementById('ptab-self').classList.remove('active');
+  document.getElementById('ptab-partner').classList.add('active');
+  renderPartnerView();
+};
+
+function renderPartnerView(){
+  const partner=getPartner();
+  const tc=document.getElementById('partner-today-content');
+  const wc=document.getElementById('partner-week-content');
+  if(!partner){
+    tc.innerHTML='<div style="font-size:13px;color:var(--text-muted);padding:8px 0">Tu compañero/a aún no se ha unido. Comparte el código de sala.</div>';
+    wc.innerHTML='';return;
+  }
+  document.getElementById('ptab-partner-name').textContent=partner;
+  const today=todayKey();
+  const te=Object.values(roomData.days||{}).find(d=>d.player===partner&&d.fecha===today);
+  if(te){
+    const c=te.checks||{};
+    const tags=[c.desayuno?'Desayuno':'',c.almuerzo?'Almuerzo':'',c.cena?'Cena':'',c.agua?'Agua':'',c.ejercicio?'Gym':''].filter(Boolean);
+    tc.innerHTML=`<div style="font-size:22px;font-weight:700;color:var(--teal)">${te.pts} pts</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${tags.join(' · ')||'—'}</div>
+      ${te.nota?`<div style="font-size:13px;margin-top:8px;padding:8px;background:var(--bg);border-radius:var(--rsm)">"${te.nota}"</div>`:''}`;
+  } else {
+    tc.innerHTML=`<div style="font-size:13px;color:var(--text-muted);padding:8px 0">${partner} aún no registró hoy.</div>`;
+  }
+  const pd=Object.values(roomData.days||{}).filter(d=>d.player===partner&&d.fecha>=getWeekStart());
+  const wp=pd.reduce((a,b)=>a+b.pts,0);
+  wc.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div class="metric-box"><div class="metric-val" style="color:var(--purple)">${pd.length}/7</div><div class="metric-label">Días semana</div></div>
+    <div class="metric-box"><div class="metric-val" style="color:var(--purple)">${wp}</div><div class="metric-label">Pts semana</div></div>
+  </div>
+  <div style="font-size:12px;color:var(--text-muted);margin-top:8px">Racha: <strong>${(roomData.players||{})[partner]?.racha||0} días</strong></div>`;
+}
+
+// ── REFRESH ALL ──
+function refreshAll(){
+  updatePtsDisplay();
+  renderProgresoPage();
+  renderMedidasHist();
+}
+
+function renderProgresoPage(){
+  const pl=roomData.players||{};
+  const me=pl[myName]||{};
+  const partner=getPartner();
+  const them=partner?(pl[partner]||{}):{};
+  const total=(me.ptsTotal||0)+(them.ptsTotal||0);
+  const el=id=>document.getElementById(id);
+  el('prog-team-total').textContent=total.toLocaleString();
+  el('prog-pts-me').textContent=(me.ptsTotal||0).toLocaleString();
+  el('prog-pts-partner').textContent=(them.ptsTotal||0).toLocaleString();
+  el('prog-racha-me').textContent=me.racha||0;
+  el('prog-racha-partner').textContent=them.racha||0;
+  if(partner){
+    el('prog-label-partner').textContent=`Pts ${partner}`;
+    el('prog-racha-label-partner').textContent=`días — ${partner}`;
+    el('ptab-partner-name').textContent=partner;
+  }
+  let lv=LEVELS[0],nxt=LEVELS[1];
+  for(let i=LEVELS.length-1;i>=0;i--){if(total>=LEVELS[i].min){lv=LEVELS[i];nxt=LEVELS[i+1]||null;break;}}
+  el('prog-level').textContent=lv.name;
+  const pct=nxt?Math.round(((total-lv.min)/(nxt.min-lv.min))*100):100;
+  el('prog-level-bar').style.width=Math.min(pct,100)+'%';
+  el('prog-level-cur').textContent=total.toLocaleString()+' pts';
+  el('prog-level-next').textContent=nxt?`siguiente: ${nxt.min.toLocaleString()} pts`:'¡Nivel máximo!';
+  // semana
+  const wk=Object.values(roomData.days||{}).filter(d=>d.fecha>=getWeekStart());
+  const ma=wk.filter(d=>d.player===myName);
+  const mb=partner?wk.filter(d=>d.player===partner):[];
+  const pa=ma.reduce((a,b)=>a+b.pts,0);
+  const pb=mb.reduce((a,b)=>a+b.pts,0);
+  const si=el('semana-info');
+  if(si)si.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div class="metric-box"><div class="metric-val" style="color:var(--teal)">${ma.length}/7</div><div class="metric-label">${myName}</div><div style="font-size:12px;font-weight:600;color:var(--teal);margin-top:2px">${pa} pts</div></div>
+    <div class="metric-box"><div class="metric-val" style="color:var(--purple)">${mb.length}/7</div><div class="metric-label">${partner||'Compañero/a'}</div><div style="font-size:12px;font-weight:600;color:var(--purple);margin-top:2px">${pb} pts</div></div>
+  </div>`;
+}
+
+function renderMedidasHist(){
+  const all=Object.values(roomData.medidas||{}).filter(m=>m.player===myName)
+    .sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,6);
+  const html=all.length?'<div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Historial</div>'+
+    all.map(m=>{
+      const foto=localStorage.getItem(`pf_foto_${myName}_${m.fecha}`);
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)">
+        <div><div style="font-size:13px;font-weight:600">${m.fecha}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${m.peso?m.peso+' kg':'—'} · ${m.cintura?m.cintura+' cm cintura':'—'}</div></div>
+        ${foto?`<img src="${foto}" class="foto-thumb" alt="foto">`:''}
+      </div>`;
+    }).join('')
+    :'<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:12px 0">Sin medidas aún.</div>';
+  ['medidas-hist','medidas-hist-alt'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.innerHTML=html;
+  });
+}
+
+// ── HISTORIAL PAGE ──
+function renderHistorialPage(){
+  const all=Object.values(roomData.days||{}).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const lEl=document.getElementById('hist-days-list');
+  lEl.innerHTML=all.length?all.slice(0,30).map(h=>{
+    const c=h.checks||{};
+    const tags=[c.desayuno?'D':'',c.almuerzo?'A':'',c.cena?'C':'',c.agua?'H':'',c.ejercicio?'G':''].filter(Boolean).join(' ');
+    return `<div class="hist-row">
+      <div><div style="font-size:13px;font-weight:500">${h.fecha} · ${h.player}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${tags||'—'}${h.pa?' · PA:'+h.pa:''}${h.diaRutina?' · Día '+h.diaRutina:''}</div>
+        ${h.nota?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px">"${h.nota.slice(0,55)}${h.nota.length>55?'…':''}"</div>`:''}
+      </div><div class="hist-pts">+${h.pts}</div></div>`;
+  }).join('')
+  :'<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:16px">Aún sin registros.</div>';
+
+  const gym=all.filter(h=>h.gym&&h.gym.length);
+  const gEl=document.getElementById('hist-gym-list');
+  gEl.innerHTML=gym.length?gym.slice(0,10).map(h=>`
+    <div style="padding:8px 0;border-bottom:0.5px solid var(--border)">
+      <div style="font-size:11px;color:var(--text-muted)">${h.fecha} · ${h.player}${h.diaRutina?' · Día '+h.diaRutina:''}</div>
+      ${h.gym.map(e=>`<div style="font-size:13px;margin-top:3px"><strong>${e.name}</strong> ${e.kg}kg · ${e.reps} reps · RPE ${e.rpe}</div>`).join('')}
+    </div>`).join('')
+  :'<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:16px">Sin sesiones registradas.</div>';
+}
+
+// ── LOGROS PAGE ──
+function renderLogrosPage(){
+  const grid=document.getElementById('badges-grid');
+  grid.innerHTML=BADGES.map(b=>{
+    const earned=b.check(roomData);
+    return `<div class="badge-card ${earned?'earned':'locked'}">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+      <div class="badge-desc">${earned?'¡Desbloqueado!':b.desc}</div></div>`;
+  }).join('');
+  const pl=roomData.players||{};
+  const me=pl[myName]||{};
+  const pt=getPartner();
+  const them=pt?(pl[pt]||{}):{};
+  const total=(me.ptsTotal||0)+(them.ptsTotal||0);
+  document.getElementById('niveles-list').innerHTML=LEVELS.map(l=>{
+    const done=total>=l.min;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)">
+      <div style="width:10px;height:10px;border-radius:50%;background:${done?'var(--teal)':'var(--border-md)'};flex-shrink:0"></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:${done?600:400};color:${done?'var(--teal-dark)':'var(--text)'}">${l.name}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${l.min.toLocaleString()} pts</div></div>
+      ${done?'<div style="font-size:11px;background:var(--teal-light);color:var(--teal-dark);padding:3px 8px;border-radius:10px;font-weight:600">✓</div>':''}
+    </div>`;
+  }).join('');
+}
+
+// ── REINICIO ──
+window.reinicioInteligente=async function(){
+  await update(rRef(`players/${myName}`),{racha:0});
+  toast('Reinicio activado. Sin culpa — seguimos.');
+};
+
+// ── NAV ──
+window.showPage=function(id,btn){
+  document.querySelectorAll('.page.app').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='historial')renderHistorialPage();
+  if(id==='logros')renderLogrosPage();
+  if(id==='progreso'){renderProgresoPage();renderMedidasHist();checkLunes();}
+  if(id==='agua'){initAguaPage();}
+  if(id==='menu')initMenuPage();
+};
+
+// ── COLLAPSIBLE ──
+window.toggleCollapse=function(id,btn){
+  const el=document.getElementById(id);el.classList.toggle('open');
+  btn.textContent=el.classList.contains('open')?btn.textContent.replace('+','–'):btn.textContent.replace('–','+');
+};
+
+// ── LOGOUT ──
+window.logout=function(){localStorage.removeItem('pf_session');location.reload();};
+
+// ── AUTO-LOGIN ──
+(function(){
+  const s=localStorage.getItem('pf_session');
+  if(!s)return;
+  try{
+    const sess=JSON.parse(s);
+    room=sess.room;myName=sess.myName;myHTA=sess.myHTA||false;
+    document.getElementById('room-code').value=room;
+    document.getElementById('player-name').value=myName;
+    document.getElementById('player-hta').value=myHTA?'yes':'no';
+    initPlayer().then(startApp);
+  }catch(e){localStorage.removeItem('pf_session');}
+})();
+</script>
+</body>
+</html>
